@@ -30,8 +30,8 @@ function Button({ children, onClick }) {
 }
 
 export default function App() {
-  const [showAddFriend, setShowAddFriend] = useState(false);
   const [friends, setFriends] = useState(initialFriends);
+  const [showAddFriend, setShowAddFriend] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
 
   function handleShowAddFriend() {
@@ -49,6 +49,17 @@ export default function App() {
     setShowAddFriend(false);
   }
 
+  function handleSplitBill(value) {
+    setFriends((friends) =>
+      friends.map((friend) =>
+        friend.id === selectedFriend.id
+          ? { ...friend, balance: friend.balance + value }
+          : friend
+      )
+    );
+    setSelectedFriend(null);
+  }
+
   return (
     <div className="app">
       <div className="sidebar">
@@ -63,7 +74,12 @@ export default function App() {
           {showAddFriend ? "Close" : "Add friend"}
         </Button>
       </div>
-      {selectedFriend && <FormSplitBill selectedFriend={selectedFriend} />}
+      {selectedFriend && (
+        <FormSplitBill
+          selectedFriend={selectedFriend}
+          onSplitBill={handleSplitBill}
+        />
+      )}
     </div>
   );
 }
@@ -153,14 +169,18 @@ function FormAddFriend({ onAddFriend }) {
   );
 }
 
-function FormSplitBill({ selectedFriend }) {
+function FormSplitBill({ selectedFriend, onSplitBill }) {
   const [bill, setBill] = useState("");
   const [paidByUser, setPaidByUser] = useState("");
   const paidByFriend = bill ? bill - paidByUser : "";
   const [whoIsPaying, setwhoIsPaying] = useState("user");
 
   function handleSubmit(e) {
-    setBill();
+    e.preventDefault();
+
+    if (!bill || !paidByUser) return;
+    // onSplitBill(abs((paidByUser - paidByFriend) / 2));
+    onSplitBill(whoIsPaying === "user" ? paidByFriend : -paidByUser);
   }
 
   return (
@@ -198,9 +218,6 @@ function FormSplitBill({ selectedFriend }) {
       </select>
 
       <Button>Split Bill</Button>
-      {console.log(bill)}
-      {console.log(paidByUser)}
-      {console.log(whoIsPaying)}
     </form>
   );
 }
